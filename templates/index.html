@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+    <head>
+        <title>QR Code Decoder</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <script>
+            document.addEventListener('paste', function (event) {
+                var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                for (index in items) {
+                    var item = items[index];
+                    if (item.kind === 'file') {
+                        var blob = item.getAsFile();
+                        var formData = new FormData();
+                        formData.append('image', blob);
+                        
+                        // Send POST request with image data
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/', true);
+                        xhr.send(formData);
+                        xhr.onreadystatechange = function() {
+                            if (this.readyState == 4 && this.status == 200) {
+                                var responseText = xhr.responseText;
+                                var parser = new DOMParser();
+                                var doc = parser.parseFromString(responseText, "text/html");
+                                var dataElement = doc.querySelector(".alert-success");
+                                if (dataElement) {
+                                    var data = dataElement.textContent;
+                                    var alertElement = document.querySelector(".alert-success");
+                                    if (alertElement) {
+                                        alertElement.textContent = data;
+                                    } else {
+                                        var containerElement = document.querySelector(".container");
+                                        var alertElement = document.createElement("div");
+                                        alertElement.classList.add("alert", "alert-success");
+                                        alertElement.setAttribute("role", "alert");
+                                        alertElement.textContent = data;
+                                        containerElement.appendChild(alertElement);
+                                    }
+                                }
+                            }
+                        };
+
+                    }
+                }
+            });
+            function copyToClipboard() {
+                var alertElement = document.querySelector(".alert-success");
+                if (alertElement) {
+                    var data = alertElement.textContent;
+                    navigator.clipboard.writeText(data);
+                }
+            }
+
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>QR Code Decoder</h1>
+            {% if data %}
+                <div class="alert alert-success" role="alert">
+                    {{ data }}
+                </div>
+                
+            {% endif %}
+            <button class="btn btn-primary" onclick="copyToClipboard()">In Zwischenablage kopieren</button>
+        </div>
+    </body>
+</html>
